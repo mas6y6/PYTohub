@@ -1,2 +1,0 @@
-import pytohub
-pytohub.run()
