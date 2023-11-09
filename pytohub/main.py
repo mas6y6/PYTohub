@@ -165,7 +165,7 @@ def start_main_menu():
             log.log("Your hub will restart because if you uploaded data to it changes directorys and glitches the hub")
             exit()
         elif out[1] == 1:
-            print("")
+            out2 = second_menu()
         else:
             pass
 

@@ -22,7 +22,7 @@ def main_menu():
     selects = [
         "Disconnect",
         "Upload",
-        "Settings"
+        "Manage modules"
     ]
     
     while True:
