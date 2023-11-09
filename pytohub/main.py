@@ -165,7 +165,7 @@ def start_main_menu():
             log.log("Your hub will restart because if you uploaded data to it changes directorys and glitches the hub")
             exit()
 
-def run():
+def run(args=None):
     global hub
     clear()
     print(textcolors.BOLD+textcolors.HEADER+"PYToHub is made by @mas6y6 on github\n"+textcolors.END)
