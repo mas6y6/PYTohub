@@ -164,6 +164,10 @@ def start_main_menu():
             log.success("Command sent")
             log.log("Your hub will restart because if you uploaded data to it changes directorys and glitches the hub")
             exit()
+        elif out[1] == 1:
+            print("")
+        else:
+            pass
 
 def run(args=None):
     global hub

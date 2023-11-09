@@ -21,7 +21,6 @@ def main_menu():
     
     selects = [
         "Disconnect",
-        "Logs",
         "Upload",
         "Settings"
     ]
