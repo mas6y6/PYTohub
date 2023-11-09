@@ -3,7 +3,7 @@ import time
 import subprocess
 import requests
 from .legohub import listallports, hubconnection
-from .menu import main_menu, second_menu
+from .menu import main_menu, second_menu, options_menu
 from getkey import getkey, keys
 
 conn = None
@@ -165,11 +165,19 @@ def start_main_menu():
             log.log("Your hub will restart because if you uploaded data to it changes directorys and glitches the hub")
             exit()
         elif out[1] == 1:
-            out2 = second_menu()
+            out2 = second_menu("Manage",options=["View mods","Delete mods"])
         else:
             pass
 
-def run(args=None):
+
+def download_program():
+    clear()
+    print(textcolors.BOLD+textcolors.HEADER+"PYToHub is made by @mas6y6 on github\n"+textcolors.END)
+    time.sleep(3)
+    print("Loading download menu")
+    h = options_menu(menuname="Download selection",desc="Please pick the lego hub that you are currently using",options=[])
+
+def run():
     global hub
     clear()
     print(textcolors.BOLD+textcolors.HEADER+"PYToHub is made by @mas6y6 on github\n"+textcolors.END)

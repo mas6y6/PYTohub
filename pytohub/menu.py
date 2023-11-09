@@ -53,12 +53,39 @@ def main_menu():
         else:
             pass
         
-def second_menu(menuname,options=[]):
+def second_menu(menuname: str,options=[]):
     sel = 0
     options.append("Back")
     while True:
         clear()
         print(menuname)
+        print()
+        for i in options:
+            if i == options[sel]:
+                print(textcolors.BACKGROUND+i+textcolors.END)
+            else:
+                print(i)
+        print("\nUse UP/DOWN arrows to navagate")
+        key = getkey()
+        if key == keys.DOWN:
+            if not sel == len(options) - 1:
+                sel += 1
+        elif key == keys.UP:
+            if not sel == 0:
+                sel -= 1
+        elif key == keys.ENTER:
+            clear()
+            return (options[sel],sel)
+        else:
+            pass
+
+def options_menu(menuname: str,options=[],desc=None):
+    sel = 0
+    while True:
+        clear()
+        print(menuname)
+        print()
+        print(desc)
         print()
         for i in options:
             if i == options[sel]:
