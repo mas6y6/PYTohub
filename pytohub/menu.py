@@ -79,7 +79,7 @@ def second_menu(menuname: str,options=[]):
         else:
             pass
 
-def options_menu(menuname: str,options=[],desc=None):
+def options_menu(menuname: str,options=[],desc=None,include_exit=False):
     sel = 0
     while True:
         clear()
@@ -92,7 +92,10 @@ def options_menu(menuname: str,options=[],desc=None):
                 print(textcolors.BACKGROUND+i+textcolors.END)
             else:
                 print(i)
-        print("\nUse UP/DOWN arrows to navagate")
+        if include_exit == True:
+            print("\nUse UP/DOWN arrows to navagate or press \"Q\" to exit")
+        else:
+            print("\nUse UP/DOWN arrows to navagate")
         key = getkey()
         if key == keys.DOWN:
             if not sel == len(options) - 1:
@@ -100,6 +103,8 @@ def options_menu(menuname: str,options=[],desc=None):
         elif key == keys.UP:
             if not sel == 0:
                 sel -= 1
+        elif key == 'q' and include_exit:
+            exit()
         elif key == keys.ENTER:
             clear()
             return (options[sel],sel)

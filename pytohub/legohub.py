@@ -21,17 +21,30 @@ class status:
 
 class hubconnection:
     def __init__(self, port: str):
-        self.hub = Serial(port,9600,timeout=10)
+        self.hub = Serial(port,9600, write_timeout=5,timeout=5)
     
     def send_raw_data(self, data: dict):
         dic = json.dumps(data)
         self.hub.write(bytes(f"�{dic}�\n\r",encoding="utf-8"))
         
     def get_raw_data(self):
-        try:
-            return self.hub.readline().decode("utf-8").split("�")[1]
-        except:
-            return None
+        Attempets = 0
+        while True:
+            if Attempets > 15:
+                return None
+            time.sleep(0.05)
+            if self.hub.in_waiting > 0:
+                try:
+                    d = json.loads(self.hub.readline().decode("utf-8").split("�")[1])
+                    print(Attempets)
+                    print(d)
+                    return d
+                except:
+                    print("None")
+                    return None
+            else:
+                print(Attempets)
+                Attempets += 1
     
     def send_packet(self,packet):
         packet = {"packet-type":packet_type.data_packet,"packet":packet}

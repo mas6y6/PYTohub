@@ -2,43 +2,71 @@ import os
 import time
 import subprocess
 import requests
+import urllib.request
+import tkinter.filedialog as fbox
+import tkinter.messagebox as box
 from .legohub import listallports, hubconnection
 from .menu import main_menu, second_menu, options_menu
 from getkey import getkey, keys
+import progressbar
 
+pbar = None
 conn = None
 processes = {}
 ports = []
 retry = False
 hub = None
 
+
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
+
 class textcolors:
-    HEADER = "\033[95m"
-    BACKGROUND = "\033[107m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    END = "\033[0m"
+    """ANSI color codes"""
+
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    BROWN = "\033[33m"
+    BLUE = "\033[34m"
+    PURPLE = "\033[35m"
+    CYAN = "\033[36m"
+    YELLOW = "\033[33m"
+    LIGHT_GRAY = "\033[0;37m"
+    DARK_GRAY = "\033[1;30m"
+    LIGHT_RED = "\033[1;31m"
+    LIGHT_GREEN = "\033[1;32m"
+    LIGHT_YELLOW = "\033[1;33m"
+    LIGHT_BLUE = "\033[1;34m"
+    LIGHT_PURPLE = "\033[1;35m"
+    LIGHT_CYAN = "\033[1;36m"
+    LIGHT_WHITE = "\033[1;37m"
     BOLD = "\033[1m"
+    FAINT = "\033[2m"
+    ITALIC = "\033[3m"
     UNDERLINE = "\033[4m"
+    BLINK = "\033[5m"
+    NEGATIVE = "\033[7m"
+    CROSSED = "\033[9m"
+    END = "\033[0m"
+
 
 def print_text_logo():
-    print(""" ______   __  __     ______   ______     __  __     __  __     ______    
+    print(
+        """ ______   __  __     ______   ______     __  __     __  __     ______    
 /\  == \ /\ \_\ \   /\__  _\ /\  __ \   /\ \_\ \   /\ \/\ \   /\  == \   
 \ \  _-/ \ \____ \  \/_/\ \/ \ \ \/\ \  \ \  __ \  \ \ \_\ \  \ \  __<   
  \ \_\    \/\_____\    \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_____\ 
   \/_/     \/_____/     \/_/   \/_____/   \/_/\/_/   \/_____/   \/_____/                                                                      
-""")
+"""
+    )
+
 
 class log:
-    def fatul(text,exitcode=1):
+    def fatul(text, exitcode=1):
         print(
-            textcolors.FAIL
+            textcolors.RED
             + textcolors.BOLD
             + "[FATUL] "
             + text
@@ -48,52 +76,34 @@ class log:
             + textcolors.END
         )
         exit(exitcode)
-    
+
     def error(text):
-        print(
-            textcolors.FAIL
-            + "[ERROR] "
-            + text
-            + textcolors.END
-        )
+        print(textcolors.RED + "[ERROR] " + text + textcolors.END)
     
+    def question(text,is_yn=False):
+        if is_yn:
+            input(textcolors.PURPLE + "[QUESTION] " + textcolors.END + text + " (Y/n) " + " :")
+        else:
+            input(textcolors.PURPLE + "[QUESTION] " + textcolors.END + text + " :")
+
     def warning(text):
-        print(
-            textcolors.WARNING
-            + "[WARNING] "
-            + text
-            + textcolors.END
-        )
-    
+        print(textcolors.YELLOW + "[WARNING] " + text + textcolors.END)
+
     def success(text):
-        print(
-            textcolors.OKGREEN
-            + "[SUCCESS] "
-            + text
-            + textcolors.END
-        )
-        
+        print(textcolors.GREEN + "[SUCCESS] " + text + textcolors.END)
+
     def successblue(text):
-        print(
-            textcolors.OKBLUE
-            + "[SUCCESS] "
-            + text
-            + textcolors.END
-        )
-    
+        print(textcolors.BLUE + "[SUCCESS] " + text + textcolors.END)
+
     def successcyan(text):
-        print(
-            textcolors.OKCYAN
-            + "[SUCCESS] "
-            + text
-            + textcolors.END
-        )
-    
+        print(textcolors.CYAN + "[SUCCESS] " + text + textcolors.END)
+
     def log(text):
-        print(
-            "[INFO] "
-            + text
-        )
+        print("[INFO] " + text)
+
+    def info(text):
+        print("[INFO] " + text)
+
 
 def findhub():
     o = 0
@@ -101,11 +111,12 @@ def findhub():
     if ports == []:
         log.warning("There is no hubs connected to this computer.")
         print("Start the program on the hub before running PYToHub to list the hub")
-        log.fatul("Terminated",exitcode=1)
+        log.fatul("Terminated", exitcode=1)
     elif len(ports) == 1:
-        print("There is only one hub connected to this computer do you want to connect it (Y/n)")
-        
-        
+        print(
+            "There is only one hub connected to this computer do you want to connect it (Y/n)"
+        )
+
     while True:
         clear()
         print("Please select one of your hubs below")
@@ -127,23 +138,23 @@ def findhub():
         elif key == keys.ENTER:
             clear()
             return ports[o]
-        elif key == 'q':
+        elif key == "q":
             exit()
         else:
             pass
 
+
 def tryconnect(r):
     global hub, retry
+    log.log("Connecting...")
     for i in range(11):
         if i == 10:
             log.error("Failed to connect to hub (Maybe you disconnected it?)")
-            log.fatul("Terminated",exitcode=1)
-            
-        log.log("Connecting...")
+            log.fatul("Terminated", exitcode=1)
+
         try:
             if retry == False:
                 hub = hubconnection(r)
-            
 
             if hub.send_ping(None) == None:
                 log.warning("No data. retrying...")
@@ -155,32 +166,210 @@ def tryconnect(r):
         except Exception as e:
             log.error(f"An error occurred ({e}). Retrying...")
 
+
+def upload_file():
+    global hub
+    log.log("Asking for file to upload...")
+    w = fbox.askopenfilename(
+        initialdir=os.path.expanduser("~"),
+        filetypes=[("Python Files", "*.py")],
+        defaultextension="",
+    )
+    log.log(f"Uploading: {w}")
+    while True:
+        qa = input(f"Do you want to upload {w} (Y/n)")
+        if qa == "Y" or qa == "y":
+            break
+        elif qa == "N" or qa == "n":
+            return
+        else:
+            pass
+    filename1 = w.split("/")
+    filename = filename1[len(filename1) - 1]
+    log.log("Uploading...")
+    log.warning("DO NOT DISCONNECT YOUR HUB OR THE FILE WILL BECOME CORRUPTED")
+    out = hub.send_command("start_file_upload", [filename])
+    time.sleep(1)
+    if out["packet-type"] == 4:
+        log.error(f"An error occurred: {out['error']}")
+    widgets = [
+        progressbar.Percentage(),
+        " ",
+        progressbar.ETA(),
+        " ",
+        textcolors.YELLOW,
+        textcolors.BOLD,
+        progressbar.Bar(marker="#", left="[", right="]"),
+        " ",
+        progressbar.Counter(),
+        " Lines uploaded",
+        textcolors.END,
+    ]
+    f = open(w, "r")
+    lines = f.readlines()
+    # pbar = progressbar.ProgressBar(max_value=len(lines), widgets=widgets)
+    # pbar.start()
+    # i2 = 0
+    print("Lines to upload", lines)
+    for i in lines:
+        hub.send_packet(i)
+        # i2 += 1
+        # pbar.update(i2)
+
+    pbar.finish()
+    log.success("Uploaded successfully")
+    log.log("Finishing")
+    out = hub.send_command("close_file", [])
+    if out["packet-type"] == 4:
+        log.error(f"An error occurred: {out['error']}")
+    out = hub.send_command("chdir", ["/"])
+    if out["packet-type"] == 4:
+        log.error(f"An error occurred: {out['error']}")
+    out = hub.send_command("chdir", ["module"])
+    if out["packet-type"] == 4:
+        log.error(f"An error occurred: {out['error']}")
+    log.success("Finished successfully")
+
+
 def start_main_menu():
     while True:
         out = main_menu()
         if out[1] == 0:
             log.log("Restarting hub Please wait...")
-            hub.send_command("end_conn",[])
+            hub.send_command("end_conn", [])
             log.success("Command sent")
-            log.log("Your hub will restart because if you uploaded data to it changes directorys and glitches the hub")
+            log.log(
+                "Your hub will restart because if you uploaded data to it changes directorys and glitches the hub"
+            )
             exit()
         elif out[1] == 1:
-            out2 = second_menu("Manage",options=["View mods","Delete mods"])
+            out2 = second_menu(
+                "Manage", options=["Upload a python file", "Upload a module"]
+            )
+            while True:
+                if out2[1] == 0:
+                    upload_file()
+                elif out2[1] == 1:
+                    pass
+                elif out2[1] == 2:
+                    break
+                else:
+                    pass
+        elif out[1] == 2:
+            while True:
+                out2 = second_menu(
+                    "Manage", options=["View mods", "Delete mods", "Delete files"]
+                )
+                if out2[1] == 0:
+                    pass
+                elif out2[1] == 1:
+                    pass
+                elif out2[1] == 2:
+                    pass
+                elif out2[1] == 3:
+                    break
+                else:
+                    pass
         else:
             pass
 
 
+def show_progress(block_num, block_size, total_size):
+    global pbar
+    if pbar is None:
+        widgets = [
+            progressbar.Percentage(),
+            " ",
+            progressbar.ETA(),
+            " ",
+            textcolors.YELLOW,
+            textcolors.BOLD,
+            progressbar.Bar(marker="#", left="[", right="]"),
+            textcolors.END,
+        ]
+        pbar = progressbar.ProgressBar(maxval=total_size, widgets=widgets)
+        pbar.start()
+
+    downloaded = block_num * block_size
+    if downloaded < total_size:
+        pbar.update(downloaded)
+    else:
+        pbar.finish()
+        pbar = None
+
+
+def download(file, url):
+    urllib.request.urlretrieve(url, file, show_progress)
+
 def download_program():
     clear()
-    print(textcolors.BOLD+textcolors.HEADER+"PYToHub is made by @mas6y6 on github\n"+textcolors.END)
+    print(
+        textcolors.BOLD
+        + textcolors.PURPLE
+        + "PYToHub is made by @mas6y6 on github\n"
+        + textcolors.END
+    )
     time.sleep(3)
     print("Loading download menu")
-    h = options_menu(menuname="Download selection",desc="Please pick the lego hub that you are currently using",options=[])
+    h = options_menu(
+        menuname="Download selection",
+        desc="Please pick the lego hub that you are currently using",
+        options=[
+            "LEGO 45678 Education Spike Prime Hub",
+            "LEGO 51515 MINDSTORMS Robot Inventor hub",
+        ],
+        include_exit=True,
+    )
+    if h[1] == 0:
+        log.log("Requesting where to download...")
+        dir = fbox.askdirectory()
+        log.log(f"Selected {dir}")
+        log.log(f"Downloading... PYToHub.llsp to {dir}")
+        try:
+            download(
+                f"{dir}/PYToHub.llsp",
+                "https://github.com/mas6y6/PyToHub-assets/raw/main/PYToHub.llsp",
+            )
+        except Exception as e:
+            log.fatul(
+                f"""An unexpeted error has occured 
+if you think this is by mistake then report this to (@mas6y6 on github)
+{e}"""
+            )
+        log.success("Downloaded")
+    elif h[1] == 1:
+        log.log("Requesting where to download...")
+        dir = fbox.askdirectory()
+        if dir == "":
+            log.warning("You did not select a directory...")
+            
+        log.log(f"Selected {dir}")
+        log.log(f"Downloading... PYToHub.lms to {dir}")
+        try:
+            download(
+                f"{dir}/PYToHub.lms",
+                "https://github.com/mas6y6/PyToHub-assets/raw/main/PYTohub.lms",
+            )
+        except Exception as e:
+            log.fatul(
+                f"""An unexpeted error has occured 
+if you think this is by mistake then report this to (@mas6y6 on github)
+{e}"""
+            )
+        log.success("Downloaded")
+    else:
+        log.fatul("Unknown error")
+
 
 def run():
     global hub
     clear()
-    print(textcolors.BOLD+textcolors.HEADER+"PYToHub is made by @mas6y6 on github\n"+textcolors.END)
+    print(
+        textcolors.BOLD
+        + textcolors.PURPLE
+        + "PYToHub is made by @mas6y6 on github\n"
+        + textcolors.END
+    )
     time.sleep(3)
     while True:
         if not hub == None:
