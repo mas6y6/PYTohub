@@ -1,15 +1,20 @@
 import os
 import time
+import sys
 import subprocess
 import requests
 import urllib.request
+import tkinter as tk
 import tkinter.filedialog as fbox
 import tkinter.messagebox as box
 from .legohub import listallports, hubconnection
 from .menu import main_menu, second_menu, options_menu
 from getkey import getkey, keys
 import progressbar
+sys.setrecursionlimit(50000)
 
+version = '1.5'
+hub_version = 'unknown'
 pbar = None
 conn = None
 processes = {}
@@ -52,15 +57,17 @@ class textcolors:
     END = "\033[0m"
 
 
-def print_text_logo():
+def print_text_logo(version,hub_version):
     print(
-        """ ______   __  __     ______   ______     __  __     __  __     ______    
+        f""" ______   __  __     ______   ______     __  __     __  __     ______    
 /\  == \ /\ \_\ \   /\__  _\ /\  __ \   /\ \_\ \   /\ \/\ \   /\  == \   
 \ \  _-/ \ \____ \  \/_/\ \/ \ \ \/\ \  \ \  __ \  \ \ \_\ \  \ \  __<   
  \ \_\    \/\_____\    \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_____\ 
-  \/_/     \/_____/     \/_/   \/_____/   \/_/\/_/   \/_____/   \/_____/                                                                      
-"""
-    )
+  \/_/     \/_____/     \/_/   \/_____/   \/_/\/_/   \/_____/   \/_____/
+  
+            (Version: {version}, Hub Version: {hub_version})
+                                                                        
+""")
 
 
 class log:
@@ -145,7 +152,7 @@ def findhub():
 
 
 def tryconnect(r):
-    global hub, retry
+    global hub, retry, hub_version
     log.log("Connecting...")
     for i in range(11):
         if i == 10:
@@ -161,6 +168,12 @@ def tryconnect(r):
             else:
                 log.success("Connected")
                 time.sleep(1)
+                log.log("Loading hub version")
+                hub_version = hub.send_command('version',[])
+                if hub_version == None:
+                    log.error('Unable to get hub version')
+                else:
+                    log.log('Received')
                 log.log("Loading main menu...")
                 break
         except Exception as e:
@@ -170,11 +183,12 @@ def tryconnect(r):
 def upload_file():
     global hub
     log.log("Asking for file to upload...")
+    
+    window = tk.Tk()
     w = fbox.askopenfilename(
-        initialdir=os.path.expanduser("~"),
         filetypes=[("Python Files", "*.py")],
-        defaultextension="",
     )
+    window.destroy()
     log.log(f"Uploading: {w}")
     while True:
         qa = input(f"Do you want to upload {w} (Y/n)")
@@ -192,6 +206,7 @@ def upload_file():
     time.sleep(1)
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
+        
     widgets = [
         progressbar.Percentage(),
         " ",
@@ -203,37 +218,56 @@ def upload_file():
         " ",
         progressbar.Counter(),
         " Lines uploaded",
-        textcolors.END,
+        textcolors.END
     ]
     f = open(w, "r")
     lines = f.readlines()
-    # pbar = progressbar.ProgressBar(max_value=len(lines), widgets=widgets)
-    # pbar.start()
-    # i2 = 0
-    print("Lines to upload", lines)
+    pbar = progressbar.ProgressBar(max_value=len(lines), widgets=widgets)
+    pbar.start()
+    
+    i2 = 0
     for i in lines:
         hub.send_packet(i)
-        # i2 += 1
-        # pbar.update(i2)
+        i2 += 1
+        pbar.update(i2)
+        time.sleep(0.45)
 
-    pbar.finish()
     log.success("Uploaded successfully")
     log.log("Finishing")
+    time.sleep(0.25)
     out = hub.send_command("close_file", [])
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
-    out = hub.send_command("chdir", ["/"])
+        time.sleep(4)
+    
+    out = hub.send_command("chdir", ['/'])
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
-    out = hub.send_command("chdir", ["module"])
+        time.sleep(4)
+    
+    out = hub.send_command("chdir", ['modules'])
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
+        time.sleep(4)
+    
+    out = hub.send_command("stop_upload", [])
+    if out["packet-type"] == 4:
+        log.error(f"An error occurred: {out['error']}")
+        time.sleep(4)
+    
     log.success("Finished successfully")
+    log.log("Please wait for 3 seconds before returning to main menu")
+    time.sleep(1)
+    log.log("Please wait for 2 seconds before returning to main menu")
+    time.sleep(1)
+    log.log("Please wait for 1 seconds before returning to main menu")
+    time.sleep(1)
 
 
 def start_main_menu():
+    global version, hub_version
     while True:
-        out = main_menu()
+        out = main_menu(version,hub_version['return'])
         if out[1] == 0:
             log.log("Restarting hub Please wait...")
             hub.send_command("end_conn", [])
@@ -243,10 +277,10 @@ def start_main_menu():
             )
             exit()
         elif out[1] == 1:
-            out2 = second_menu(
-                "Manage", options=["Upload a python file", "Upload a module"]
-            )
             while True:
+                out2 = second_menu(
+                "Manage", options=["Upload a python file", "Upload a module"]
+                )
                 if out2[1] == 0:
                     upload_file()
                 elif out2[1] == 1:
@@ -323,6 +357,8 @@ def download_program():
     if h[1] == 0:
         log.log("Requesting where to download...")
         dir = fbox.askdirectory()
+        if dir == "":
+            log.fatul("You did not select a directory...")
         log.log(f"Selected {dir}")
         log.log(f"Downloading... PYToHub.llsp to {dir}")
         try:
@@ -337,11 +373,12 @@ if you think this is by mistake then report this to (@mas6y6 on github)
 {e}"""
             )
         log.success("Downloaded")
+        log.log('Make sure that you upload this file to your Spike Prime hub')
     elif h[1] == 1:
         log.log("Requesting where to download...")
         dir = fbox.askdirectory()
         if dir == "":
-            log.warning("You did not select a directory...")
+            log.fatul("You did not select a directory...")
             
         log.log(f"Selected {dir}")
         log.log(f"Downloading... PYToHub.lms to {dir}")
@@ -357,6 +394,7 @@ if you think this is by mistake then report this to (@mas6y6 on github)
 {e}"""
             )
         log.success("Downloaded")
+        log.log('Make sure that you upload this file to your Mindstorms hub')
     else:
         log.fatul("Unknown error")
 

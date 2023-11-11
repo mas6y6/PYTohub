@@ -4,6 +4,18 @@ import os
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
+def print_text_logo(version,hub_version):
+    print(
+        f""" ______   __  __     ______   ______     __  __     __  __     ______    
+/\  == \ /\ \_\ \   /\__  _\ /\  __ \   /\ \_\ \   /\ \/\ \   /\  == \   
+\ \  _-/ \ \____ \  \/_/\ \/ \ \ \/\ \  \ \  __ \  \ \ \_\ \  \ \  __<   
+ \ \_\    \/\_____\    \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_____\ 
+  \/_/     \/_____/     \/_/   \/_____/   \/_/\/_/   \/_____/   \/_____/
+  
+            (Version: {version}, Hub Version: {hub_version})
+                                                                        
+""")
+
 class textcolors:
     HEADER = "\033[95m"
     BACKGROUND = "\033[107m"
@@ -16,7 +28,7 @@ class textcolors:
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
 
-def main_menu():
+def main_menu(g1,g2):
     sel = 0
     
     selects = [
@@ -27,12 +39,7 @@ def main_menu():
     
     while True:
         clear()
-        print("""\r ______   __  __     ______   ______     __  __     __  __     ______    
-/\  == \ /\ \_\ \   /\__  _\ /\  __ \   /\ \_\ \   /\ \/\ \   /\  == \   
-\ \  _-/ \ \____ \  \/_/\ \/ \ \ \/\ \  \ \  __ \  \ \ \_\ \  \ \  __<   
- \ \_\    \/\_____\    \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_____\ 
-  \/_/     \/_____/     \/_/   \/_____/   \/_/\/_/   \/_____/   \/_____/                                                                      
-""")
+        print_text_logo(g1,g2)
         print()
         for i in selects:
             if i == selects[sel]:
