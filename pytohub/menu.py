@@ -86,7 +86,7 @@ def second_menu(menuname: str,options=[]):
         else:
             pass
 
-def options_menu(menuname: str,options=[],desc=None,include_exit=False):
+def options_menu(menuname: str,options=[],desc=None,include_exit=False, exitfn=exit):
     sel = 0
     while True:
         clear()
@@ -111,7 +111,7 @@ def options_menu(menuname: str,options=[],desc=None,include_exit=False):
             if not sel == 0:
                 sel -= 1
         elif key == 'q' and include_exit:
-            exit()
+            exitfn()
         elif key == keys.ENTER:
             clear()
             return (options[sel],sel)

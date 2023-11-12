@@ -7,6 +7,8 @@ import urllib.request
 import tkinter as tk
 import tkinter.filedialog as fbox
 import tkinter.messagebox as box
+from .logging import log
+from .textcolors import textcolors
 from .legohub import listallports, hubconnection
 from .menu import main_menu, second_menu, options_menu
 from getkey import getkey, keys
@@ -27,36 +29,6 @@ def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-class textcolors:
-    """ANSI color codes"""
-
-    BLACK = "\033[30m"
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    BROWN = "\033[33m"
-    BLUE = "\033[34m"
-    PURPLE = "\033[35m"
-    CYAN = "\033[36m"
-    YELLOW = "\033[33m"
-    LIGHT_GRAY = "\033[0;37m"
-    DARK_GRAY = "\033[1;30m"
-    LIGHT_RED = "\033[1;31m"
-    LIGHT_GREEN = "\033[1;32m"
-    LIGHT_YELLOW = "\033[1;33m"
-    LIGHT_BLUE = "\033[1;34m"
-    LIGHT_PURPLE = "\033[1;35m"
-    LIGHT_CYAN = "\033[1;36m"
-    LIGHT_WHITE = "\033[1;37m"
-    BOLD = "\033[1m"
-    FAINT = "\033[2m"
-    ITALIC = "\033[3m"
-    UNDERLINE = "\033[4m"
-    BLINK = "\033[5m"
-    NEGATIVE = "\033[7m"
-    CROSSED = "\033[9m"
-    END = "\033[0m"
-
-
 def print_text_logo(version,hub_version):
     print(
         f""" ______   __  __     ______   ______     __  __     __  __     ______    
@@ -68,49 +40,6 @@ def print_text_logo(version,hub_version):
             (Version: {version}, Hub Version: {hub_version})
                                                                         
 """)
-
-
-class log:
-    def fatul(text, exitcode=1):
-        print(
-            textcolors.RED
-            + textcolors.BOLD
-            + "[FATUL] "
-            + text
-            + " ("
-            + str(exitcode)
-            + ")"
-            + textcolors.END
-        )
-        exit(exitcode)
-
-    def error(text):
-        print(textcolors.RED + "[ERROR] " + text + textcolors.END)
-    
-    def question(text,is_yn=False):
-        if is_yn:
-            input(textcolors.PURPLE + "[QUESTION] " + textcolors.END + text + " (Y/n) " + " :")
-        else:
-            input(textcolors.PURPLE + "[QUESTION] " + textcolors.END + text + " :")
-
-    def warning(text):
-        print(textcolors.YELLOW + "[WARNING] " + text + textcolors.END)
-
-    def success(text):
-        print(textcolors.GREEN + "[SUCCESS] " + text + textcolors.END)
-
-    def successblue(text):
-        print(textcolors.BLUE + "[SUCCESS] " + text + textcolors.END)
-
-    def successcyan(text):
-        print(textcolors.CYAN + "[SUCCESS] " + text + textcolors.END)
-
-    def log(text):
-        print("[INFO] " + text)
-
-    def info(text):
-        print("[INFO] " + text)
-
 
 def findhub():
     o = 0
