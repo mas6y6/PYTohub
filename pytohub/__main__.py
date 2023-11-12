@@ -1,7 +1,9 @@
 from .main import run, download_program
 from .hmd_maker import run_lmod_maker
 from .logging import log
+import time
 import sys
+import os
 
 def show_help():
     print("""
@@ -21,7 +23,7 @@ if __name__ == "__main__":
             download_program()
         
         elif '--module_maker' in sys.argv:
-            run_lmod_maker()
+            run_lmod_maker(sys.argv)
             
         elif '--help' in sys.argv:
             show_help()

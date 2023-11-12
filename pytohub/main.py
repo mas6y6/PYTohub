@@ -113,20 +113,23 @@ def upload_file():
     global hub
     log.log("Asking for file to upload...")
     
-    window = tk.Tk()
     w = fbox.askopenfilename(
         filetypes=[("Python Files", "*.py")],
     )
-    window.destroy()
-    log.log(f"Uploading: {w}")
+    if w == '':
+        log.info('No file selected')
+        time.sleep(5)
+        return
+    
     while True:
-        qa = input(f"Do you want to upload {w} (Y/n)")
+        qa = input(f"Do you want to upload {w} (Y/n) :\n")
         if qa == "Y" or qa == "y":
             break
         elif qa == "N" or qa == "n":
-            return
+            return 
         else:
             pass
+    
     filename1 = w.split("/")
     filename = filename1[len(filename1) - 1]
     log.log("Uploading...")
@@ -151,6 +154,10 @@ def upload_file():
     ]
     f = open(w, "r")
     lines = f.readlines()
+    if lines == []:
+        log.error("There are no lines in this file upload canceled.")
+        time.sleep(3)
+        return
     pbar = progressbar.ProgressBar(max_value=len(lines), widgets=widgets)
     pbar.start()
     
@@ -192,6 +199,26 @@ def upload_file():
     log.log("Please wait for 1 seconds before returning to main menu")
     time.sleep(1)
 
+def delete_mods():
+    while True:
+        mods = hub.send_command('listdir',[])
+        mods_files = []
+        for i in mods:
+            if not len(i.split('.')) == 1:
+                mods.append(i)
+                
+        out = second_menu('Select the mod that you want to remove',mods_files)
+        if out[0] == 'Back':
+            break
+        else:
+            out2 = options_menu(f'Are you sure that you want remove \"{out[0]}\"',['Yes','No'],include_exit=False,exitfn=None)
+            if out2[1] == 0:
+                log.info("Sending command to delete file")
+                cmd = hub.send_command('')
+                if cmd['packet-type'] == 4:
+                    log.error(f"An error occurred: {cmd['error']}")
+                else:
+                    log.success("File deleted")
 
 def start_main_menu():
     global version, hub_version
@@ -224,7 +251,7 @@ def start_main_menu():
                     "Manage", options=["View mods", "Delete mods", "Delete files"]
                 )
                 if out2[1] == 0:
-                    pass
+                    delete_mods()
                 elif out2[1] == 1:
                     pass
                 elif out2[1] == 2:
@@ -281,7 +308,7 @@ def download_program():
             "LEGO 45678 Education Spike Prime Hub",
             "LEGO 51515 MINDSTORMS Robot Inventor hub",
         ],
-        include_exit=True,
+        include_exit=True
     )
     if h[1] == 0:
         log.log("Requesting where to download...")
