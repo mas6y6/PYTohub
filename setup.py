@@ -4,7 +4,7 @@ f = open("README.md","r").read()
 
 setup(
     name="pytohub",
-    version="v1.0",
+    version="v1.7",
     author="mas6y6",
     long_description=f,
     long_description_content_type='text/markdown',

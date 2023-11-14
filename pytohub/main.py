@@ -13,10 +13,11 @@ from .legohub import listallports, hubconnection
 from .menu import main_menu, second_menu, options_menu
 from getkey import getkey, keys
 import progressbar
+
 sys.setrecursionlimit(50000)
 
-version = '1.5'
-hub_version = 'unknown'
+version = "1.7"
+hub_version = "unknown"
 pbar = None
 conn = None
 processes = {}
@@ -29,7 +30,7 @@ def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def print_text_logo(version,hub_version):
+def print_text_logo(version, hub_version):
     print(
         f""" ______   __  __     ______   ______     __  __     __  __     ______    
 /\  == \ /\ \_\ \   /\__  _\ /\  __ \   /\ \_\ \   /\ \/\ \   /\  == \   
@@ -39,7 +40,9 @@ def print_text_logo(version,hub_version):
   
             (Version: {version}, Hub Version: {hub_version})
                                                                         
-""")
+"""
+    )
+
 
 def findhub():
     o = 0
@@ -98,38 +101,37 @@ def tryconnect(r):
                 log.success("Connected")
                 time.sleep(1)
                 log.log("Loading hub version")
-                hub_version = hub.send_command('version',[])
+                hub_version = hub.send_command("version", [])
                 if hub_version == None:
-                    log.error('Unable to get hub version')
+                    log.error("Unable to get hub version")
                 else:
-                    log.log('Received')
+                    log.log("Received")
                 log.log("Loading main menu...")
                 break
         except Exception as e:
             log.error(f"An error occurred ({e}). Retrying...")
 
-
 def upload_file():
     global hub
     log.log("Asking for file to upload...")
-    
+
     w = fbox.askopenfilename(
         filetypes=[("Python Files", "*.py")],
     )
-    if w == '':
-        log.info('No file selected')
+    if w == "":
+        log.info("No file selected")
         time.sleep(5)
         return
-    
+
     while True:
         qa = input(f"Do you want to upload {w} (Y/n) :\n")
         if qa == "Y" or qa == "y":
             break
         elif qa == "N" or qa == "n":
-            return 
+            return
         else:
             pass
-    
+
     filename1 = w.split("/")
     filename = filename1[len(filename1) - 1]
     log.log("Uploading...")
@@ -138,7 +140,7 @@ def upload_file():
     time.sleep(1)
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
-        
+
     widgets = [
         progressbar.Percentage(),
         " ",
@@ -150,7 +152,7 @@ def upload_file():
         " ",
         progressbar.Counter(),
         " Lines uploaded",
-        textcolors.END
+        textcolors.END,
     ]
     f = open(w, "r")
     lines = f.readlines()
@@ -160,7 +162,7 @@ def upload_file():
         return
     pbar = progressbar.ProgressBar(max_value=len(lines), widgets=widgets)
     pbar.start()
-    
+
     i2 = 0
     for i in lines:
         hub.send_packet(i)
@@ -175,22 +177,22 @@ def upload_file():
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
         time.sleep(4)
-    
-    out = hub.send_command("chdir", ['/'])
+
+    out = hub.send_command("chdir", ["/"])
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
         time.sleep(4)
-    
-    out = hub.send_command("chdir", ['modules'])
+
+    out = hub.send_command("chdir", ["modules"])
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
         time.sleep(4)
-    
+
     out = hub.send_command("stop_upload", [])
     if out["packet-type"] == 4:
         log.error(f"An error occurred: {out['error']}")
         time.sleep(4)
-    
+
     log.success("Finished successfully")
     log.log("Please wait for 3 seconds before returning to main menu")
     time.sleep(1)
@@ -199,31 +201,87 @@ def upload_file():
     log.log("Please wait for 1 seconds before returning to main menu")
     time.sleep(1)
 
+def view_mods():
+    global hub
+    hub.send_command('listdir',[])
+
 def delete_mods():
     while True:
-        mods = hub.send_command('listdir',[])
+        mods = hub.send_command("listdir", [])['return']
         mods_files = []
         for i in mods:
-            if not len(i.split('.')) == 1:
-                mods.append(i)
-                
-        out = second_menu('Select the mod that you want to remove',mods_files)
-        if out[0] == 'Back':
+            if len(i.split(".")) == 1:
+                mods_files.append(i)
+
+        out = second_menu("Select the mod that you want to remove", mods_files)
+        if out[0] == "Back":
             break
         else:
-            out2 = options_menu(f'Are you sure that you want remove \"{out[0]}\"',['Yes','No'],include_exit=False,exitfn=None)
+            out2 = options_menu(
+                f'Are you sure that you want remove "{out[0]}"',
+                ["Yes", "No"],
+                include_exit=False,
+                exitfn=None,
+            )
             if out2[1] == 0:
                 log.info("Sending command to delete file")
-                cmd = hub.send_command('')
-                if cmd['packet-type'] == 4:
+                cmd = hub.send_command("remove_mod", [out[0]])
+                if cmd["packet-type"] == 4:
+                    log.error(f"An error occurred: {cmd['error']}")
+                else:
+                    log.success("Mod deleted")
+                
+                time.sleep(0.5)
+                
+                cmd = hub.send_command("chdir", "/")
+                if cmd["packet-type"] == 4:
+                    log.error(f"An error occurred: {cmd['error']}")
+                else:
+                    pass
+                    
+                time.sleep(0.5)
+                
+                cmd = hub.send_command("chdir", "modules")
+                if cmd["packet-type"] == 4:
+                    log.error(f"An error occurred: {cmd['error']}")
+                else:
+                    pass
+            else:
+                pass
+
+def delete_file_mods():
+    while True:
+        mods = hub.send_command("listdir", [])['return']
+        mods_files = []
+        for i in mods:
+            if not len(i.split(".")) == 1:
+                mods_files.append(i)
+
+        out = second_menu("Select the mod that you want to remove", mods_files)
+        if out[0] == "Back":
+            break
+        else:
+            out2 = options_menu(
+                f'Are you sure that you want remove "{out[0]}"',
+                ["Yes", "No"],
+                include_exit=False,
+                exitfn=None,
+            )
+            if out2[1] == 0:
+                log.info("Sending command to delete file")
+                cmd = hub.send_command("remove_file", [out[0]])
+                if cmd["packet-type"] == 4:
                     log.error(f"An error occurred: {cmd['error']}")
                 else:
                     log.success("File deleted")
+            else:
+                pass
+
 
 def start_main_menu():
     global version, hub_version
     while True:
-        out = main_menu(version,hub_version['return'])
+        out = main_menu(version, hub_version["return"])
         if out[1] == 0:
             log.log("Restarting hub Please wait...")
             hub.send_command("end_conn", [])
@@ -235,28 +293,29 @@ def start_main_menu():
         elif out[1] == 1:
             while True:
                 out2 = second_menu(
-                "Manage", options=["Upload a python file", "Upload a module"]
+                    "Upload", options=["Upload a python file", "Upload a module"]
                 )
                 if out2[1] == 0:
                     upload_file()
                 elif out2[1] == 1:
-                    pass
+                    log.info("This is in the works upload a file instead")
+                    time.sleep(4)
                 elif out2[1] == 2:
                     break
                 else:
                     pass
         elif out[1] == 2:
             while True:
-                out2 = second_menu(
+                out3 = second_menu(
                     "Manage", options=["View mods", "Delete mods", "Delete files"]
                 )
-                if out2[1] == 0:
+                if out3[1] == 0:
+                    view_mods()
+                elif out3[1] == 1:
                     delete_mods()
-                elif out2[1] == 1:
-                    pass
-                elif out2[1] == 2:
-                    pass
-                elif out2[1] == 3:
+                elif out3[1] == 2:
+                    delete_file_mods()
+                elif out3[1] == 3:
                     break
                 else:
                     pass
@@ -291,6 +350,7 @@ def show_progress(block_num, block_size, total_size):
 def download(file, url):
     urllib.request.urlretrieve(url, file, show_progress)
 
+
 def download_program():
     clear()
     print(
@@ -308,7 +368,7 @@ def download_program():
             "LEGO 45678 Education Spike Prime Hub",
             "LEGO 51515 MINDSTORMS Robot Inventor hub",
         ],
-        include_exit=True
+        include_exit=True,
     )
     if h[1] == 0:
         log.log("Requesting where to download...")
@@ -329,13 +389,13 @@ if you think this is by mistake then report this to (@mas6y6 on github)
 {e}"""
             )
         log.success("Downloaded")
-        log.log('Make sure that you upload this file to your Spike Prime hub')
+        log.log("Make sure that you upload this file to your Spike Prime hub")
     elif h[1] == 1:
         log.log("Requesting where to download...")
         dir = fbox.askdirectory()
         if dir == "":
             log.fatul("You did not select a directory...")
-            
+
         log.log(f"Selected {dir}")
         log.log(f"Downloading... PYToHub.lms to {dir}")
         try:
@@ -350,7 +410,7 @@ if you think this is by mistake then report this to (@mas6y6 on github)
 {e}"""
             )
         log.success("Downloaded")
-        log.log('Make sure that you upload this file to your Mindstorms hub')
+        log.log("Make sure that you upload this file to your Mindstorms hub")
     else:
         log.fatul("Unknown error")
 
