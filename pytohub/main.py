@@ -11,7 +11,7 @@ from getkey import getkey, keys
 
 sys.setrecursionlimit(50000)
 
-version = "1.7"
+version = "1.7.5"
 hub_version = "unknown"
 pbar = None
 conn = None
