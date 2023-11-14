@@ -1,8 +1,4 @@
-import os
-import time
-import sys
-import subprocess
-import requests
+import os, time, sys, subprocess, requests, progressbar, signal
 import urllib.request
 import tkinter as tk
 import tkinter.filedialog as fbox
@@ -12,7 +8,6 @@ from .textcolors import textcolors
 from .legohub import listallports, hubconnection
 from .menu import main_menu, second_menu, options_menu
 from getkey import getkey, keys
-import progressbar
 
 sys.setrecursionlimit(50000)
 
@@ -277,19 +272,26 @@ def delete_file_mods():
             else:
                 pass
 
+def disconnect():
+    global hub
+    log.log("Quiting...")
+    if not hub == None:
+        log.log("Restarting hub Please wait...")
+        hub.send_command("end_conn", [])
+        log.success("Command sent")
+        log.log(
+            "Your hub will restart because if you uploaded data to it changes directorys and glitches the hub"
+        )
+        exit()
+
+signal.signal(signal.SIGINT, disconnect)
 
 def start_main_menu():
     global version, hub_version
     while True:
         out = main_menu(version, hub_version["return"])
         if out[1] == 0:
-            log.log("Restarting hub Please wait...")
-            hub.send_command("end_conn", [])
-            log.success("Command sent")
-            log.log(
-                "Your hub will restart because if you uploaded data to it changes directorys and glitches the hub"
-            )
-            exit()
+            disconnect()
         elif out[1] == 1:
             while True:
                 out2 = second_menu(
@@ -349,7 +351,6 @@ def show_progress(block_num, block_size, total_size):
 
 def download(file, url):
     urllib.request.urlretrieve(url, file, show_progress)
-
 
 def download_program():
     clear()
