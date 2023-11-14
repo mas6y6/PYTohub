@@ -13,28 +13,20 @@ How to download PYToHub
 pip install pytohub
 ```
 
+Press `enter` when you see your hub's serial port, Make sure that you setted up your lego hub for pytohub to connect.
+
 # How to run pytohub
-There is 2 ways to run pytohub.
+
 **You can directly run it in the terminal**
 ```
 python -m pytohub
 ```
-**OR Run it using a python file**
-```py
-import pytohub
-pytohub.run()
-```
 
 # How to setup your lego hub
-There is 2 ways to setup your lego hub.
 
 You need to setup your lego hub
+
 **You can directly run it in the terminal**
 ```
 python -m pytohub --download
-```
-**OR Run it using a python file**
-```py
-import pytohub
-pytohub.download_program()
 ```

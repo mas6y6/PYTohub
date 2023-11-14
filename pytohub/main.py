@@ -272,19 +272,24 @@ def delete_file_mods():
             else:
                 pass
 
-def disconnect():
+def disconnect(*args):
+    log.log("Restarting hub Please wait...")
+    hub.send_command("end_conn", [])
+    log.success("Command sent")
+    log.log(
+        "Your hub will restart because if you uploaded data to it changes directorys and glitches the hub"
+    )
+    exit()
+
+def quit(*args):
     global hub
     log.log("Quiting...")
-    if not hub == None:
-        log.log("Restarting hub Please wait...")
-        hub.send_command("end_conn", [])
-        log.success("Command sent")
-        log.log(
-            "Your hub will restart because if you uploaded data to it changes directorys and glitches the hub"
-        )
+    if hub == None:
         exit()
+    else:
+        disconnect()
 
-signal.signal(signal.SIGINT, disconnect)
+signal.signal(signal.SIGINT, quit)
 
 def start_main_menu():
     global version, hub_version
